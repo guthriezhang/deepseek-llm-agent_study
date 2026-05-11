@@ -61,7 +61,8 @@ coordinator_agent = (
         "request": RunnablePassthrough()
    } 
    | delegation_branch 
-   | (lambda x: x['output']))
+   | (lambda x: x['output'])
+)
 
 def main():
    if not llm:
