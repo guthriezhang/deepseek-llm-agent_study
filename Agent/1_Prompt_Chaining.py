@@ -1,11 +1,15 @@
 import json
+from pathlib import Path
+
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 
 # ---------- 1. 加载 API 密钥 ----------
-with open('key.json', 'r', encoding='utf-8') as f:
+project_root = Path(__file__).resolve().parent.parent
+key_path = project_root / "key.json"
+with key_path.open('r', encoding='utf-8') as f:
     config = json.load(f)
 
 # ---------- 2. 初始化模型 (兼容 OpenAI 接口的 DeepSeek) ----------

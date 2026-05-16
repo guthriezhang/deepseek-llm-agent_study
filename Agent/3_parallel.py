@@ -1,12 +1,16 @@
 import json
 import asyncio
+from pathlib import Path
+from operator import itemgetter
 
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import Runnable, RunnableParallel, RunnablePassthrough
 
-with open('key.json', 'r', encoding='utf-8') as f:
+project_root = Path(__file__).resolve().parent.parent
+key_path = project_root / "key.json"
+with key_path.open('r', encoding='utf-8') as f:
     config = json.load(f)
 
 llm = ChatOpenAI(
@@ -16,36 +20,8 @@ llm = ChatOpenAI(
     temperature=0.7,
 )
 
-summarize_chain: Runnable = (
-   ChatPromptTemplate.from_messages([
-       ("system", "请简明扼要地总结以下主题："),
-       ("user", "{topic}")
-   ])
-   | llm
-   | StrOutputParser()
-)
-
-import os
-import asyncio
-from typing import Optional
-
-from langchain_openai import ChatOpenAI
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import Runnable, RunnableParallel, RunnablePassthrough
-
-# --- 配置 ---
-# 确保环境变量已设置 API key（如 OPENAI_API_KEY）
-try:
-   llm: Optional[ChatOpenAI] = ChatOpenAI(model="gpt-4o-mini", temperature=0.7)
-  
-except Exception as e:
-   print(f"初始化语言模型出错：{e}")
-   llm = None
-
 # --- 定义独立链 ---
 # 三个链分别执行不同任务，可并行运行
-
 summarize_chain: Runnable = (
    ChatPromptTemplate.from_messages([
        ("system", "请简明扼要地总结以下主题："),
@@ -78,7 +54,7 @@ map_chain = RunnableParallel(
        "summary": summarize_chain,
        "questions": questions_chain,
        "key_terms": terms_chain,
-       "topic": RunnablePassthrough(),  # 传递原始 topic
+      "topic": itemgetter("topic"),  # 传递原始 topic
    }
 )
 
@@ -100,7 +76,7 @@ full_parallel_chain = (
 
 async def run_parallel_example(topic:str) -> None :
    try:
-      response = await full_parallel_chain.ainvoke(topic)
+      response = await full_parallel_chain.ainvoke({"topic": topic})
       print(response)
    except Exception as e:
       print(f"\nError:{e}")

@@ -1,9 +1,13 @@
 import json
+from pathlib import Path
+
 from langchain_openai import ChatOpenAI
 from langchain.agents import create_agent
 from langchain.messages import HumanMessage, AIMessage, SystemMessage
 
-with open('key.json', 'r', encoding='utf-8') as f:
+project_root = Path(__file__).resolve().parent.parent
+key_path = project_root / "key.json"
+with key_path.open('r', encoding='utf-8') as f:
     config = json.load(f)
 
 llm_model = ChatOpenAI(
